@@ -1,0 +1,27 @@
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace {{../namespace}}.Models
+{
+    {{#if isEnum}}
+    public enum {{className}}
+    {
+        {{#each schema.enum}}
+        [JsonPropertyName("{{this}}")]
+        {{toPascalCase this}} = {{@index}},
+        {{/each}}
+    }
+    {{else}}
+    public class {{className}}
+    {
+        {{#each properties}}
+        /// <summary>
+        /// {{description}}
+        /// </summary>
+        [JsonPropertyName("{{originalName}}")]
+        public {{type}}{{#unless required}}?{{/unless}} {{name}} { get; set; }
+        {{/each}}
+    }
+    {{/if}}
+}
