@@ -1,0 +1,78 @@
+{{! Partial template for Kafka Consumer implementation }}
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using {{namespace}}.Models;
+using {{namespace}}.Serialization;
+
+namespace {{namespace}}.Kafka
+{
+    public partial class KafkaConsumerService
+    {
+        private async Task Consume{{toPascalCase operation.topicName}}(CancellationToken cancellationToken)
+        {
+            var consumerConfig = new ConsumerConfig
+            {
+                BootstrapServers = _kafkaConfig.BootstrapServers,
+                GroupId = _kafkaConfig.ConsumerGroupId,
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = true
+            };
+
+            using var consumer = new ConsumerBuilder<string, {{operation.messagePayloadType}}>(consumerConfig)
+                .SetKeyDeserializer(Deserializers.Utf8)
+                .SetValueDeserializer(_serializationService.GetDeserializer<{{operation.messagePayloadType}}>())
+                .SetErrorHandler((_, e) => _logger.LogError($"Kafka error: {e.Reason}"))
+                .Build();
+
+            try
+            {
+                consumer.Subscribe("{{operation.topicName}}");
+                _logger.LogInformation($"Started consuming from topic: {{operation.topicName}}");
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        var consumeResult = consumer.Consume(cancellationToken);
+                        if (consumeResult != null)
+                        {
+                            _logger.LogInformation($"Received message: {consumeResult.Message.Key}");
+                            // Process the message
+                            await Process{{toPascalCase operation.topicName}}Message(
+                                consumeResult.Message.Key, 
+                                consumeResult.Message.Value);
+                        }
+                    }
+                    catch (ConsumeException ex)
+                    {
+                        _logger.LogError($"Error consuming message: {ex.Message}");
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when cancellation token is canceled
+                _logger.LogInformation("Consumer was stopped");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unexpected error: {ex.Message}");
+            }
+            finally
+            {
+                consumer.Close();
+            }
+        }
+
+        private Task Process{{toPascalCase operation.topicName}}Message(string key, {{operation.messagePayloadType}} value)
+        {
+            // TODO: Implement message processing logic
+            _logger.LogInformation($"Processing {{operation.topicName}} message with key: {key}");
+            return Task.CompletedTask;
+        }
+    }
+}
