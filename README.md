@@ -21,25 +21,50 @@ This project provides a generator for creating C# code from AsyncAPI specificati
 - .NET 6.0 SDK or newer
 
 - PowerShell 7.0 or newer (for Windows)
+### Solution structure
+```
+asyncapi-csharp-kafka-project/
+|-- asyncapi-generator.js
+|-- customer-avro-simple.yaml
+|-- Generate-AsyncAPI.ps1
+|-- package.json
+|-- /partials/
+|   |-- avroSerializer.cs.hbs
+|   |-- jsonSerializer.cs.hbs
+|   |-- kafkaConsumer.cs.hbs
+|   |-- kafkaProducer.cs.hbs
+|-- /template/
+|   |-- appsettings.json.hbs
+|   |-- {{serviceName}}.csproj.hbs
+|   |-- /src/
+|       |-- Program.cs.hbs
+|       |-- /Kafka/
+|           |-- KafkaConsumerService.cs.hbs
+|           |-- KafkaProducerService.cs.hbs
+|       |-- /Models/
+|           |-- {{className}}.cs.hbs
+|       |-- /Serialization/
+|           |-- AvroSerializationService.cs.hbs
+|           |-- JsonSerializationService.cs.hbs
+|   |-- /test/
+|       |-- IntegrationTests.cs.hbs
+|       |-- SerializationTests.cs.hbs
+|       |-- UnitTests.cs.hbs
+```
 
 ## Installation
 
 1. Clone this repository:
 
    ```
-
    git clone 
-
    cd asyncapi-csharp-kafka-template
-
    ```
 
 2. Install the required Node.js packages:
 
    ```
-
    npm install
-
    ```
 
 ## Usage
