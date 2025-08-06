@@ -1,0 +1,49 @@
+{{! Partial template for Avro Serialization implementation }}
+using System;
+using System.IO;
+using System.Text;
+using Confluent.Kafka;
+using Chr.Avro.Confluent;
+using Chr.Avro.Serialization;
+
+namespace {{namespace}}.Serialization
+{
+    public class AvroSerializationService : ISerializationService
+    {
+        private readonly SchemaRegistryConfig _schemaRegistryConfig;
+        private readonly CachedSchemaRegistryClient _schemaRegistryClient;
+
+        public AvroSerializationService(string schemaRegistryUrl)
+        {
+            _schemaRegistryConfig = new SchemaRegistryConfig
+            {
+                Url = schemaRegistryUrl
+            };
+            _schemaRegistryClient = new CachedSchemaRegistryClient(_schemaRegistryConfig);
+        }
+
+        public Serializer<T> GetSerializer<T>()
+        {
+            var serializerBuilder = new AvroSerializerBuilder(_schemaRegistryClient);
+            var serializer = serializerBuilder.Build<T>();
+            
+            return (s, o, ctx) => 
+            {
+                if (o == null) return null;
+                return serializer.Serialize(o, null);
+            };
+        }
+
+        public Deserializer<T> GetDeserializer<T>()
+        {
+            var deserializerBuilder = new AvroDeserializerBuilder(_schemaRegistryClient);
+            var deserializer = deserializerBuilder.Build<T>();
+            
+            return (data, isNull, ctx) =>
+            {
+                if (isNull || data == null) return default;
+                return deserializer.Deserialize(data, null, 0);
+            };
+        }
+    }
+}
