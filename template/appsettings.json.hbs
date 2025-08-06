@@ -1,0 +1,22 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "Kafka": {
+    "BootstrapServers": "{{bootstrapServers}}",
+    "SchemaRegistryUrl": "{{schemaRegistryUrl}}",
+    "ConsumerGroupId": "{{groupId.enum.[0]}}",
+    "UseAvroSerialization": {{#if (eq serializationFormat "avro")}}true{{/if}}{{#if (eq serializationFormat "json")}}false{{/if}}{{#if (eq serializationFormat "both")}}true{{/if}},
+    "Topics": {
+      {{#each channels~}}
+      "{{@key}}": {
+        "Name": "{{@key}}"
+      }{{#unless @last}},{{/unless}}
+      {{~/each}}
+    }
+  }
+}
