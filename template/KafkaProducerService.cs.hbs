@@ -1,0 +1,36 @@
+using System;
+using System.Threading.Tasks;
+using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using {{namespace}}.Serialization;
+
+namespace {{namespace}}.Kafka
+{
+    public partial class KafkaProducerService
+    {
+        private readonly ILogger<KafkaProducerService> _logger;
+        private readonly ProducerConfig _producerConfig;
+        private readonly ISerializationService _serializationService;
+
+        public KafkaProducerService(
+            ILogger<KafkaProducerService> logger,
+            IOptions<KafkaConfig> kafkaOptions,
+            ISerializationService serializationService)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            var kafkaConfig = kafkaOptions?.Value ?? throw new ArgumentNullException(nameof(kafkaOptions));
+            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+
+            _producerConfig = new ProducerConfig
+            {
+                BootstrapServers = kafkaConfig.BootstrapServers,
+                Acks = Acks.All
+            };
+        }
+    }
+}
+
+{{#each operations.publish}}
+{{> kafkaProducer operation=this}}
+{{/each}}
