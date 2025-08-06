@@ -1,0 +1,56 @@
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using {{namespace}}.Kafka;
+using {{namespace}}.Serialization;
+
+namespace {{namespace}}
+{
+    public class Program
+    {
+        public static async Task Main(string[] args)
+        {
+            var host = CreateHostBuilder(args).Build();
+            await host.RunAsync();
+        }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostContext, config) =>
+                {
+                    config.AddJsonFile("appsettings.json", optional: false);
+                    config.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true);
+                    config.AddEnvironmentVariables();
+                    config.AddCommandLine(args);
+                })
+                .ConfigureServices((hostContext, services) =>
+                {
+                    // Configuration
+                    services.Configure<KafkaConfig>(hostContext.Configuration.GetSection("Kafka"));
+                    
+                    // Serialization services
+                    {{#if (eq serializationFormat "json")}}
+                    services.AddSingleton<ISerializationService, JsonSerializationService>();
+                    {{else if (eq serializationFormat "avro")}}
+                    services.AddSingleton<ISerializationService, AvroSerializationService>(sp => 
+                        new AvroSerializationService(hostContext.Configuration["Kafka:SchemaRegistryUrl"]));
+                    {{else}}
+                    services.AddSingleton<ISerializationService>(sp => {
+                        var useAvro = hostContext.Configuration.GetValue<bool>("Kafka:UseAvroSerialization");
+                        if (useAvro)
+                        {
+                            return new AvroSerializationService(hostContext.Configuration["Kafka:SchemaRegistryUrl"]);
+                        }
+                        return new JsonSerializationService();
+                    });
+                    {{/if}}
+                    
+                    // Kafka services
+                    services.AddSingleton<KafkaProducerService>();
+                    services.AddHostedService<KafkaConsumerService>();
+                });
+    }
+}
