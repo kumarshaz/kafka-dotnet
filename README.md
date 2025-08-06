@@ -1,5 +1,6 @@
 # AsyncAPI C# Kafka Template
 This project provides a generator for creating C# code from AsyncAPI specifications, designed to work with Kafka in both JSON and Avro formats. The solution directly generates C# code without relying on the AsyncAPI generator's template system. The project is hosted in Azure DevOps at [asyncapi-csharp-kafka-template](https://dev.azure.com/tqlweb/Enterprise%20IT/_git/asyncapi-csharp-kafka-template).
+*** not a comprehensive working project***
 
 ## Features
 
